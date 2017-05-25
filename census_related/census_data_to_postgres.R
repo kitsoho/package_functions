@@ -16,10 +16,10 @@ library(dplyr)
 # suppressWarnings(library(acs))
 
 
-get_connection<-function(dbname = "usa_data",
+get_connection<-function(dbname = "testing",
         password = "spatial",
-        host="192.168.1.4",
-        port=5432,
+        host="localhost",
+        port=5433,
         user="postgres"){
         
         
@@ -153,9 +153,87 @@ get_data<-function(year = year, type = type, table = NULL, span = span, director
 	
 	
 
-check_if_exists<-function(){
+check_if_exists<-function(table){
+        
+        
+        
+        
+        
 }
 	
+
+
+
+add_geo_to_postgres <- function(filedir, 
+        dbname = "testing", 
+        schema = "census_geography", 
+        reload = FALSE){
+        
+        
+        # filedir <- shape
+        #DROP TABLE "census_geography"."tl_2016_us_state";
+        con <- .connection$con
+        make_schema_public(schema)
+        
+        basename <- gsub(".shp", "", basename(filedir), fixed = TRUE)
+        schema_table <- paste(schema, basename, sep = ".")
+        tableexists <- dplyr::db_has_table(.connection$con, basename)
+        
+        
+        if(tableexists & !reload) stop(paste("Table", basename, "already exists in the database"))
+        
+        if(tableexists & reload){
+                dplyr::db_drop_table(con, basename)
+        }
+        
+        cmd <- sprintf('ogr2ogr -f "PostgreSQL" PG:"host=192.168.1.4 port=5432 user=postgres dbname=%s password=spatial" "%s" -nln "%s.%s" -nlt PROMOTE_TO_MULTI -lco "GEOM_TYPE=geometry" -lco "GEOMETRY_NAME=geom"',
+                dbname, filedir, schema, basename)
+        
+        cat("About to add to database using command\n", cmd)
+        
+        system(cmd)
+        invisible()
+        
+}
+
+
+
+
+
+
+
+
+
+add_data_to_postgres <- function(){
+}
+        
+        
+
+tableexists <- dplyr::db_has_table(.connection$con, "hollie333")
+        
+if(tableexists & !reload) stop(paste("Table", basename, "already exists in the database"))
+
+if(tableexists & reload){
+        dplyr::db_drop_table(con, basename)
+}
+
+
+
+
+
+make_schema_public <- function(schemaname){
+        
+        RPostgreSQL::dbSendQuery(.connection$con, paste("CREATE SCHEMA IF NOT EXISTS", schemaname))
+        RPostgreSQL::dbSendQuery(.connection$con,
+                sprintf("SET search_path = '%s', public", schemaname))
+        invisible()
+}
+
+
+
+make_schema_public("temp333")
+
+
 	
 	var_description<-function(table){
 		
