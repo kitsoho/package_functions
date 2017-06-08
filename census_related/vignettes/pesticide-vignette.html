@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Zev Ross" />
+
+<meta name="date" content="2017-06-02" />
+
+<title>Vignette for updating pesticide data</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Vignette for updating pesticide data</h1>
+<h4 class="author"><em>Zev Ross</em></h4>
+<h4 class="date"><em>2017-06-02</em></h4>
+
+
+
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#devtools::load_all()</span>
+knitr<span class="op">::</span>opts_chunk<span class="op">$</span><span class="kw">set</span>(<span class="dt">eval =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<div id="updating-the-pesticide-data" class="section level1">
+<h1>Updating the pesticide data</h1>
+<p>This is the process for setting up the pesticide database years 1991-20xx.</p>
+<div id="create-the-database" class="section level2">
+<h2>Create the database</h2>
+<p>Here I’m using a template, if using a template, that database cannot be open or you’ll get an error related to the db being “accessed by other users”. This uses <code>psql</code>. If the database exists it will present you with a menu to choose if you want to delete.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># you may want to run kill_postgres_connections() first to make sure no</span>
+<span class="co"># one is connected.</span>
+<span class="kw">create_postgres_db</span>(<span class="st">&quot;pesticide&quot;</span>, <span class="dt">host =</span> <span class="st">&quot;localhost&quot;</span>, <span class="dt">user =</span> <span class="st">&quot;postgres&quot;</span>, <span class="dt">template =</span> <span class="st">&quot;zevross&quot;</span>)</code></pre></div>
+</div>
+<div id="create-a-connection-to-the-new-database" class="section level2">
+<h2>Create a connection to the new database</h2>
+<p>This may no longer be necessary actually. I converted most of the functions to use <code>psql</code> and <code>system</code> so that there is no need to use R at all except to run the functions.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">get_connection</span>(<span class="st">&quot;pesticide&quot;</span>, <span class="st">&quot;postgres&quot;</span>, <span class="st">&quot;localhost&quot;</span>)
+.connection<span class="op">$</span>con
+<span class="co">#src:  postgres 9.6.2 [postgres@localhost:5432/pur]</span>
+<span class="co">#tbls: spatial_ref_sys</span></code></pre></div>
+</div>
+<div id="fill-the-database-with-the-tables-andd-schema" class="section level2">
+<h2>Fill the database with the tables andd schema</h2>
+<p>There is an SQL file (<code>inst/pesticide/sql/create_pesticide_db_tables.sql</code>) that has the SQL code needed to create the tables. The default is to put these tables in the <code>public</code> schema, but you can change this. For the pesticide project we’re using <code>chem_site</code>. The function to use is <code>add_tables_db()</code>, it takes a path, then the SQL file. Formats the result and sends it with <code>dbSendQuery()</code>.</p>
+<p>The function will present the user with a menu to choose whether to create a new schema.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">add_tables_db</span>(<span class="st">&quot;pesticide/sql&quot;</span>, <span class="st">&quot;create_pesticide_auxiliary_tables.sql&quot;</span>, <span class="dt">host =</span> <span class="st">&quot;localhost&quot;</span>, <span class="dt">user =</span> <span class="st">&quot;postgres&quot;</span>, <span class="dt">dbname =</span> <span class="st">&quot;pesticide&quot;</span>, <span class="dt">use_schema =</span> <span class="ot">TRUE</span>, <span class="dt">schemaname =</span> <span class="st">&quot;pesticide_auxtables&quot;</span>)
+<span class="kw">add_tables_db</span>(<span class="st">&quot;pesticide/sql&quot;</span>, <span class="st">&quot;create_pesticide_data_tables.sql&quot;</span>, <span class="dt">use_schema =</span> <span class="ot">TRUE</span>, <span class="dt">schemaname =</span> <span class="st">&quot;pesticide_data&quot;</span>)</code></pre></div>
+</div>
+<div id="add-the-pesticide-data" class="section level2">
+<h2>Add the pesticide data</h2>
+<p>There are two workhorse functions and one glue function that are used to download and then copy the data to the database:</p>
+<ol style="list-style-type: decimal">
+<li><code>pesticide_data_download()</code> takes a year and then an optional URL and optional destination directory. The default URL it uses is <a href="ftp://pestreg.cdpr.ca.gov/pub/outgoing/pur_archives/" class="uri">ftp://pestreg.cdpr.ca.gov/pub/outgoing/pur_archives/</a> and it creates a temporary directory if one is not provided. The zip is unzipped and includes a file for each county.</li>
+<li><code>pesticide_copy_to_db()</code> takes a path to the data, and a user, host, dbname</li>
+<li><code>pesticide_download_plus_copy()</code> takes a year, user, host and dbname and then runs the download function and the copy to db function. It has an optional flag for <code>cleanup</code> which is set to TRUE meaning that it will delete the directory when done.</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># For one year</span>
+<span class="kw">pesticide_download_plus_copy</span>(<span class="dv">1991</span>, <span class="st">&quot;postgres&quot;</span>, <span class="st">&quot;localhost&quot;</span>, <span class="st">&quot;pesticide&quot;</span>)
+<span class="co"># For multiple years, this appears to have taken about an hour</span>
+<span class="co"># and results in 81,717,028 records</span>
+<span class="kw">lapply</span>(<span class="dv">1991</span><span class="op">:</span><span class="dv">2015</span>, <span class="cf">function</span>(x) <span class="kw">pesticide_download_plus_copy</span>(x, <span class="st">&quot;postgres&quot;</span>, <span class="st">&quot;localhost&quot;</span>, <span class="st">&quot;pesticide&quot;</span>))</code></pre></div>
+</div>
+<div id="add-the-auxiliary-data" class="section level2">
+<h2>Add the auxiliary data</h2>
+<p>We have a series of 6 tables that are used to determine site and chemical groups. These are:</p>
+<ul>
+<li><code>chemical.txt</code></li>
+<li><code>site.txt</code></li>
+<li><code>chemical_groups.txt</code></li>
+<li><code>site_groups.txt</code></li>
+<li><code>chemicals_to_groups.txt</code></li>
+<li><code>sites_to_groups.txt</code></li>
+</ul>
+<p>The chemical groups files were provided to Zev in May 2017 (UPDATE THIS AS NEEDED) and the site files were provided in 2016 I believe and we are re-using. The raw data and a script for processing the raw data are in the <code>data-raw</code> folder (which is part of .Rbuildignore). I processed the data and saved as pipe-delimited files in <code>pesticide/data</code> (pipe-delimiting because some chemical names have commas).</p>
+<p>To add the files to the database (after they’ve been processed with the <code>data-raw/pesticide/process_raw_pesticide_data.R</code>) do the following:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Truncate tables first, otherwise you'll get an error related to primary keys</span>
+<span class="co"># the default for which tables to truncate for this function are the 6 tables</span>
+<span class="co"># listed above</span>
+<span class="kw">truncate_postgres_tables</span>(<span class="dt">dbname =</span> <span class="st">&quot;pesticide&quot;</span>, <span class="dt">schema =</span> <span class="st">&quot;pesticide_auxtables&quot;</span>)
+<span class="co"># This function is pretty specific to the pesticide aux tables</span>
+<span class="co"># so all the arguments are set to defaults</span>
+<span class="kw">pesticide_load_auxiliary_tables</span>()</code></pre></div>
+<table>
+<caption>chemical.txt</caption>
+<thead>
+<tr class="header">
+<th align="left">chem_code</th>
+<th align="left">chemalpha_cd</th>
+<th align="left">chemname</th>
+<th align="left">include</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">03015</td>
+<td align="left">650</td>
+<td align="left">ACETONITRILE</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">00565</td>
+<td align="left">24100</td>
+<td align="left">BUTYLATE</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">02074</td>
+<td align="left">700</td>
+<td align="left">ACETOPHENONE</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">02602</td>
+<td align="left">79750</td>
+<td align="left">2-HYDROXY ALACHLOR</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">03017</td>
+<td align="left">727</td>
+<td align="left">ACETYLATED LANOLIN</td>
+<td align="left">t</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>site.txt</caption>
+<thead>
+<tr class="header">
+<th align="left">site_code</th>
+<th align="left">site_name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">-1</td>
+<td align="left">UNKNOWN</td>
+</tr>
+<tr class="even">
+<td align="left">10</td>
+<td align="left">STRUCTURAL PEST CONTROL</td>
+</tr>
+<tr class="odd">
+<td align="left">30</td>
+<td align="left">LANDSCAPE MAINTENANCE</td>
+</tr>
+<tr class="even">
+<td align="left">40</td>
+<td align="left">RIGHTS OF WAY</td>
+</tr>
+<tr class="odd">
+<td align="left">50</td>
+<td align="left">PUBLIC HEALTH</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>chemical_groups.txt</caption>
+<thead>
+<tr class="header">
+<th align="left">group_id</th>
+<th align="left">group_name</th>
+<th align="left">map_service</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">CARC_AB_65</td>
+<td align="left">Carcinogens</td>
+<td align="left">True</td>
+</tr>
+<tr class="even">
+<td align="left">CHOIN</td>
+<td align="left">Cholinesterase Inhibitors</td>
+<td align="left">True</td>
+</tr>
+<tr class="odd">
+<td align="left">ENDO</td>
+<td align="left">Endocrine Disruptors</td>
+<td align="left">True</td>
+</tr>
+<tr class="even">
+<td align="left">FUMIG</td>
+<td align="left">Fumigants</td>
+<td align="left">True</td>
+</tr>
+<tr class="odd">
+<td align="left">NEON</td>
+<td align="left">Neonicotinoids</td>
+<td align="left">True</td>
+</tr>
+<tr class="even">
+<td align="left">REPDEV_65</td>
+<td align="left">Reproductive and Developmental Toxicants</td>
+<td align="left">True</td>
+</tr>
+<tr class="odd">
+<td align="left">AIR</td>
+<td align="left">Toxic Air Contaminants</td>
+<td align="left">True</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>site_groups.txt</caption>
+<thead>
+<tr class="header">
+<th align="left">group_id</th>
+<th align="left">group_name</th>
+<th align="left">map_service</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">BERR</td>
+<td align="left">Berries</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">CITR</td>
+<td align="left">Citrus</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">NUTS</td>
+<td align="left">Nuts</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">POME</td>
+<td align="left">Pome Fruit</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">STON</td>
+<td align="left">Stone Fruit</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">TROP</td>
+<td align="left">Tropical/Sub-Tropical Fruit</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">HERB</td>
+<td align="left">Herb/Spice</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">CUCU</td>
+<td align="left">Cucurbits</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">VEGF</td>
+<td align="left">Vegetables, Fruiting</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">VEGL</td>
+<td align="left">Vegetables, Leafy</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">VEGG</td>
+<td align="left">Vegetables, Ground</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">BEAN</td>
+<td align="left">Beans</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">LEGU</td>
+<td align="left">Legume (Forage - Fodder)</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">GRAI</td>
+<td align="left">Grain Crops</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">BERR</td>
+<td align="left">Berries</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">CITR</td>
+<td align="left">Citrus</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">NUTS</td>
+<td align="left">Nuts</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">POME</td>
+<td align="left">Pome Fruit</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">STON</td>
+<td align="left">Stone Fruit</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">TROP</td>
+<td align="left">Tropical/Sub-Tropical Fruit</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">HERB</td>
+<td align="left">Herb/Spice</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">CUCU</td>
+<td align="left">Cucurbits</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">VEGF</td>
+<td align="left">Vegetables, Fruiting</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">VEGL</td>
+<td align="left">Vegetables, Leafy</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">VEGG</td>
+<td align="left">Vegetables, Ground</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">BEAN</td>
+<td align="left">Beans</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">LEGU</td>
+<td align="left">Legume (Forage - Fodder)</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">GRAI</td>
+<td align="left">Grain Crops</td>
+<td align="left">t</td>
+</tr>
+<tr class="odd">
+<td align="left">FORA</td>
+<td align="left">Forage Hay/Silage</td>
+<td align="left">t</td>
+</tr>
+<tr class="even">
+<td align="left">FORA</td>
+<td align="left">Forage Hay/Silage</td>
+<td align="left">t</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>chemicals_to_groups.txt</caption>
+<thead>
+<tr class="header">
+<th align="left">group_id</th>
+<th align="left">chem_code</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">CARC_AB_65</td>
+<td align="left">00007</td>
+</tr>
+<tr class="even">
+<td align="left">CARC_AB_65</td>
+<td align="left">00009</td>
+</tr>
+<tr class="odd">
+<td align="left">CARC_AB_65</td>
+<td align="left">00020</td>
+</tr>
+<tr class="even">
+<td align="left">CARC_AB_65</td>
+<td align="left">00027</td>
+</tr>
+<tr class="odd">
+<td align="left">CARC_AB_65</td>
+<td align="left">00032</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>sites_to_groups.txt</caption>
+<thead>
+<tr class="header">
+<th align="left">group_id</th>
+<th align="left">site_code</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">BERR</td>
+<td align="left">01000</td>
+</tr>
+<tr class="even">
+<td align="left">BERR</td>
+<td align="left">01002</td>
+</tr>
+<tr class="odd">
+<td align="left">BERR</td>
+<td align="left">01003</td>
+</tr>
+<tr class="even">
+<td align="left">BERR</td>
+<td align="left">01004</td>
+</tr>
+<tr class="odd">
+<td align="left">BERR</td>
+<td align="left">01005</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="change-the-years-in-the-insert-script-years" class="section level2">
+<h2>Change the years in the insert script years</h2>
+<p>The insert scripts are designed to compute statistics based on a beginning and end year. Each time you do this, if you’ve updated the data you’ll need to update the scripts. As a result, we set this up so that there is a script <code>template.sql</code> and a script <code>active.sql</code>. The template has <code>XXXX..YYYY</code> in place of the year. Then you run the following to update the year and it re-writes the active scripts. This will update three scripts:</p>
+<ol style="list-style-type: decimal">
+<li><code>insert_udc_county_summary_active.R</code></li>
+<li><code>insert_udc_township_summary_active.R</code></li>
+<li><code>insert_udc_section_summary_active.R</code></li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">change_insert_years</span>(<span class="dv">1991</span>, <span class="dv">2015</span>)</code></pre></div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

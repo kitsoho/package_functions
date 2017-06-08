@@ -1,0 +1,160 @@
+---
+title: "Vignette for updating pesticide data"
+author: "Zev Ross"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r}
+#devtools::load_all()
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+
+# Updating the pesticide data
+
+This is the process for setting up the pesticide database years 1991-20xx.
+
+
+## Create the database
+
+Here I'm using a template, if using a template, that database cannot be open or you'll get an error related to the db being "accessed by other users". This uses `psql`. If the database exists it will present you with a menu to choose if you want to delete.
+
+```{r}
+# you may want to run kill_postgres_connections() first to make sure no
+# one is connected.
+create_postgres_db("pesticide", host = "localhost", user = "postgres", template = "zevross")
+```
+
+
+## Create a connection to the new database
+
+This may no longer be necessary actually. I converted most of the functions to use `psql` and `system` so that there is no need to use R at all except to run the functions.
+
+```{r}
+get_connection("pesticide", "postgres", "localhost")
+.connection$con
+#src:  postgres 9.6.2 [postgres@localhost:5432/pur]
+#tbls: spatial_ref_sys
+```
+
+
+## Fill the database with the tables andd schema
+
+There is an SQL file (`inst/pesticide/sql/create_pesticide_db_tables.sql`) that has the SQL code needed to create the tables. The default is to put these tables in the `public` schema, but you can change this. For the pesticide project we're using `chem_site`. The function to use is `add_tables_db()`, it takes a path, then the SQL file. Formats the result and sends it with `dbSendQuery()`.
+
+The function will present the user with a menu to choose whether to create a new schema.
+
+```{r}
+run_sql_script("pesticide/sql", "create_pesticide_auxiliary_tables.sql", host = "localhost", user = "postgres", dbname = "pesticide", use_schema = TRUE, schemaname = "pesticide_auxtables")
+run_sql_script("pesticide/sql", "create_pesticide_data_tables.sql", use_schema = TRUE, schemaname = "pesticide_data")
+```
+
+
+## Add the pesticide data
+
+There are two workhorse functions and one glue function that are used to download and then copy the data to the database:
+
+1. `pesticide_data_download()` takes a year and then an optional URL and optional destination directory. The default URL it uses is ftp://pestreg.cdpr.ca.gov/pub/outgoing/pur_archives/ and it creates a temporary directory if one is not provided. The zip is unzipped and includes a file for each county.
+2. `pesticide_copy_to_db()` takes a path to the data, and a user, host, dbname
+3. `pesticide_download_plus_copy()` takes a year, user, host and dbname and then runs the download function and the copy to db function. It has an optional flag for `cleanup` which is set to TRUE meaning that it will delete the directory when done.
+
+```{r}
+# For one year
+pesticide_download_plus_copy(1991, "postgres", "localhost", "pesticide")
+# For multiple years, this appears to have taken about an hour
+# and results in 81,717,028 records
+lapply(1991:2015, function(x) pesticide_download_plus_copy(x, "postgres", "localhost", "pesticide"))
+```
+
+I last ran this June 1, 2017 and it seemed to take about an hour. 
+
+
+## Add the auxiliary data
+
+We have a series of 6 tables that are used to determine site and chemical groups. These are:
+
+* `chemical.txt`
+* `site.txt`
+* `chemical_groups.txt`
+* `site_groups.txt`
+* `chemicals_to_groups.txt`
+* `sites_to_groups.txt`
+
+The chemical groups files were provided to Zev in May 2017 (UPDATE THIS AS NEEDED) and the site files were provided in 2016 I believe and we are re-using. The raw data and a script for processing the raw data are in the `data-raw` folder (which is part of .Rbuildignore). I processed the data and saved as pipe-delimited files in `pesticide/data` (pipe-delimiting because some chemical names have commas).
+
+To add the files to the database (after they've been processed with the `data-raw/pesticide/process_raw_pesticide_data.R`) do the following:
+
+```{r}
+# Truncate tables first, otherwise you'll get an error related to primary keys
+# the default for which tables to truncate for this function are the 6 tables
+# listed above
+truncate_postgres_tables(dbname = "pesticide", schema = "pesticide_auxtables")
+# This function is pretty specific to the pesticide aux tables
+# so all the arguments are set to defaults
+pesticide_load_auxiliary_tables()
+```
+
+
+
+
+```{r, eval = TRUE, echo = FALSE, message=FALSE}
+devtools::load_all()
+path <- system.file("pesticide/data", package = "zrsamisc")
+knitr::kable(readr::read_delim(paste0(path, "/chemical.txt"), delim = "|")[1:5,], caption = "chemical.txt")
+knitr::kable(readr::read_delim(paste0(path, "/site.txt"), delim = "|")[1:5,], caption = "site.txt")
+knitr::kable(readr::read_delim(paste0(path, "/chemical_groups.txt"), delim = "|"), caption = "chemical_groups.txt")
+knitr::kable(readr::read_delim(paste0(path, "/site_groups.txt"), delim = "|"), caption = "site_groups.txt")
+knitr::kable(readr::read_delim(paste0(path, "/chemicals_to_groups.txt"), delim = "|")[1:5,], caption = "chemicals_to_groups.txt")
+knitr::kable(readr::read_delim(paste0(path, "/sites_to_groups.txt"), delim = "|")[1:5,], caption = "sites_to_groups.txt")
+```
+
+
+## Change the years in the insert script years
+
+The insert scripts are designed to compute statistics based on a beginning and end year. Each time you do this, if you've updated the data you'll need to update the scripts. As a result, we set this up so that there is a script `template.sql` and a script `active.sql`. The template has `XXXX..YYYY` in place of the year. Then you run the following to update the year and it re-writes the active scripts. This will update three scripts:
+
+1. `insert_udc_county_summary_active.R`
+1. `insert_udc_township_summary_active.R`
+1. `insert_udc_section_summary_active.R`
+
+
+```{r}
+# Update the years with this
+change_insert_years(1991, 2015)
+```
+
+
+## Compute summaries
+
+As mentioned in the previous section there are scripts with a suffix of `active.sql` that are designed to compute summaries by county, township and section. These take some time to run.
+
+```{r}
+run_sql_script("pesticide/sql", 
+               "insert_udc_county_summary_active.sql", 
+               "localhost", "postgres", "pesticide",
+               use_schema = TRUE, 
+               schemaname = "pesticide_data", 
+               escape_dollar = TRUE)
+
+run_sql_script("pesticide/sql", 
+               "insert_udc_township_summary_active.sql", 
+               "localhost", "postgres", "pesticide",
+               use_schema = TRUE, 
+               schemaname = "pesticide_data", 
+               escape_dollar = TRUE)
+
+run_sql_script("pesticide/sql", 
+               "insert_udc_section_summary_active.sql", 
+               "localhost", "postgres", "pesticide",
+               use_schema = TRUE, 
+               schemaname = "pesticide_data", 
+               escape_dollar = TRUE)
+```
+
+

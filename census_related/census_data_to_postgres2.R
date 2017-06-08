@@ -29,6 +29,8 @@ library(dplyr)
 #'
 #' @examples
 
+
+
 get_connection <- function(
 	dbname = "testing",
 	password = "spatial",
